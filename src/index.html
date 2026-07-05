@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stand UP!</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="win" class="win">
+    <header class="titlebar" data-tauri-drag-region>
+      <div class="traffic">
+        <button class="tl close" aria-label="close"></button><button class="tl min" aria-label="minimize"></button><button class="tl zoom" aria-label="zoom" disabled></button>
+      </div>
+      <div class="title">Stand UP!</div>
+    </header>
+
+    <main id="rings" class="rings"></main>
+
+    <div class="divider"></div>
+
+    <section class="settings">
+      <div class="sec-label">Reminders</div>
+      <div class="row">
+        <div class="lbl">Sitting</div>
+        <div class="stepper" data-key="sitMin" data-step="5" data-min="5" data-max="120">
+          <button class="dec" aria-label="decrease">−</button><div class="val">45 min</div><button class="inc" aria-label="increase">+</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="lbl">Standing</div>
+        <div class="stepper" data-key="standMin" data-step="1" data-min="1" data-max="30">
+          <button class="dec" aria-label="decrease">−</button><div class="val">5 min</div><button class="inc" aria-label="increase">+</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="lbl">Water break</div>
+        <div class="stepper" data-key="waterMin" data-step="5" data-min="5" data-max="120">
+          <button class="dec" aria-label="decrease">−</button><div class="val">30 min</div><button class="inc" aria-label="increase">+</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="lbl">Launch at login</div>
+        <button class="toggle" id="loginToggle" role="switch" aria-checked="true"><span class="knob"></span></button>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

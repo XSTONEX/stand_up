@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+<style>
+@keyframes su-breathe { 0%, 100% { transform: scale(1); opacity: 0.82; } 50% { transform: scale(1.09); opacity: 1; } }
+</style>
+</helmet>
+<div style="width:440px;height:540px;position:relative;overflow:hidden;background:{{ wallpaper }};display:flex;align-items:center;justify-content:center;font-family:'Lora','Georgia','Songti SC',serif;">
+  <div style="position:absolute;width:240px;height:240px;border-radius:50%;background:{{ blob1 }};top:26px;left:-70px;"></div>
+  <div style="position:absolute;width:290px;height:290px;border-radius:50%;background:{{ blob2 }};bottom:-70px;right:-90px;"></div>
+  <div style="position:relative;width:360px;border-radius:22px;background:{{ winBg }};backdrop-filter:blur(50px) saturate(1.8);-webkit-backdrop-filter:blur(50px) saturate(1.8);border:1px solid {{ winBorder }};box-shadow:0 30px 70px rgba(8,22,38,0.35), inset 0 1px 0 {{ innerHi }};display:flex;flex-direction:column;overflow:hidden;">
+    <div style="height:48px;flex:none;display:flex;align-items:center;padding:0 16px;position:relative;">
+      <div style="display:flex;gap:8px;position:relative;z-index:1;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#FF5F57;box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.15);"></div>
+        <div style="width:12px;height:12px;border-radius:50%;background:#FEBC2E;box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.15);"></div>
+        <div style="width:12px;height:12px;border-radius:50%;background:#28C840;box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.15);"></div>
+      </div>
+      <div style="position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;color:{{ textSec }};letter-spacing:0.2px;">Stand UP!</div>
+    </div>
+    <div style="flex:none;display:flex;justify-content:center;gap:22px;padding:14px 0 0;">
+      <div style="display:flex;flex-direction:column;align-items:center;width:152px;">
+        <div style="position:relative;width:130px;height:130px;flex:none;">
+          <svg width="130" height="130" viewBox="0 0 130 130" style="position:absolute;top:0;left:0;">
+            <circle cx="65" cy="65" r="57" fill="none" stroke="{{ ringTrack }}" stroke-width="{{ ringWidth }}"></circle>
+            <circle cx="65" cy="65" r="57" fill="none" stroke="{{ sitRingColor }}" stroke-width="{{ ringWidth }}" stroke-linecap="round" stroke-dasharray="{{ ringC }}" stroke-dashoffset="{{ sitDash }}" transform="rotate(-90 65 65)"></circle>
+          </svg>
+          <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <sc-if value="{{ showSitPerson }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;">
+                <img src="icon-sit.png" alt="person sitting at a desk" style="height:36px;width:auto;object-fit:contain;filter:{{ iconFilter }};opacity:{{ iconOpacity }};" />
+              </div>
+            </sc-if>
+            <sc-if value="{{ showStandPerson }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;">
+                <img src="icon-stand.png" alt="person standing at a desk" style="height:40px;width:auto;object-fit:contain;filter:{{ iconFilter }};opacity:{{ iconOpacity }};" />
+              </div>
+            </sc-if>
+            <sc-if value="{{ sitTwoBtn }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:14px;left:14px;width:102px;height:102px;border-radius:50%;overflow:hidden;display:flex;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);box-shadow:inset 0 0 0 1px {{ discBorder }};">
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:{{ discPrimaryBg }};color:#083A39;font-size:13px;font-weight:600;cursor:default;">Start</div>
+                <div style="width:1px;background:{{ discDivider }};"></div>
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:{{ discSecBg }};color:{{ textPri }};font-size:13px;font-weight:500;cursor:default;">Skip</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ sitOneBtn }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:14px;left:14px;width:102px;height:102px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ discPrimaryBg }};backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);box-shadow:inset 0 0 0 1px {{ discBorder }};color:#083A39;font-size:15px;font-weight:600;letter-spacing:0.3px;cursor:default;">Next</div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="height:18px;margin-top:10px;font-size:12px;font-weight:500;color:{{ sitCaptionColor }};letter-spacing:0.2px;">{{ sitCaption }}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;width:152px;">
+        <div style="position:relative;width:130px;height:130px;flex:none;">
+          <svg width="130" height="130" viewBox="0 0 130 130" style="position:absolute;top:0;left:0;">
+            <defs>
+              <linearGradient id="wr{{ uid }}" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="{{ waterRingA }}"></stop>
+                <stop offset="1" stop-color="{{ waterRingB }}"></stop>
+              </linearGradient>
+            </defs>
+            <circle cx="65" cy="65" r="57" fill="none" stroke="{{ ringTrack }}" stroke-width="{{ ringWidth }}"></circle>
+            <circle cx="65" cy="65" r="57" fill="none" stroke="url(#wr{{ uid }})" stroke-width="{{ ringWidth }}" stroke-linecap="round" stroke-dasharray="{{ ringC }}" stroke-dashoffset="{{ waterDash }}" transform="rotate(-90 65 65)"></circle>
+          </svg>
+          <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <sc-if value="{{ showCup }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;">
+              <svg width="54" height="54" viewBox="0 0 48 48" fill="none">
+                <defs>
+                  <clipPath id="cc{{ uid }}">
+                    <path d="M14.6 12 L16.9 37.3 Q17.2 40.6 20.9 40.6 L27.1 40.6 Q30.8 40.6 31.1 37.3 L33.4 12 Z"></path>
+                  </clipPath>
+                  <linearGradient id="wg{{ uid }}" x1="0" y1="{{ waterY }}" x2="0" y2="41" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="{{ waterTop }}"></stop>
+                    <stop offset="1" stop-color="{{ waterBot }}"></stop>
+                  </linearGradient>
+                </defs>
+                <g clip-path="url(#cc{{ uid }})">
+                  <path d="{{ waterBodyD }}" fill="url(#wg{{ uid }})" fill-opacity="0.92"></path>
+                  <path d="{{ waveLine2D }}" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity="{{ waveOpacity }}" stroke-linecap="round"></path>
+                </g>
+                <path d="{{ surfaceD }}" stroke="{{ surfaceColor }}" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+                <path d="M13 11 L15.4 37.5 Q15.8 42 20.8 42 L27.2 42 Q32.2 42 32.6 37.5 L35 11" stroke="{{ cupStroke }}" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M11.6 11 L36.4 11" stroke="{{ cupStroke }}" stroke-width="2.4" stroke-linecap="round"></path>
+                <path d="M17.8 15 L18.9 29.5" stroke="{{ glassHi }}" stroke-width="1.5" stroke-linecap="round" opacity="0.45"></path>
+              </svg>
+            </div>
+            </sc-if>
+            <sc-if value="{{ waterTwoBtn }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:14px;left:14px;width:102px;height:102px;border-radius:50%;overflow:hidden;display:flex;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);box-shadow:inset 0 0 0 1px {{ discBorder }};">
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:{{ discPrimaryBg }};color:#083A39;font-size:13px;font-weight:600;cursor:default;">Done</div>
+                <div style="width:1px;background:{{ discDivider }};"></div>
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;background:{{ discSecBg }};color:{{ textPri }};font-size:13px;font-weight:500;cursor:default;">Skip</div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="height:18px;margin-top:10px;font-size:12px;font-weight:500;color:{{ waterCaptionColor }};letter-spacing:0.2px;">{{ waterCaption }}</div>
+      </div>
+    </div>
+    <sc-if value="{{ isWindow }}" hint-placeholder-val="{{ true }}">
+    <div style="margin:14px 24px 0;height:1px;background:{{ divider }};flex:none;"></div>
+    <div style="padding:10px 24px 12px;display:flex;flex-direction:column;flex:none;">
+      <div style="font-size:11px;font-weight:600;color:{{ textSec }};letter-spacing:0.8px;margin-bottom:2px;">Reminders</div>
+      <sc-for list="{{ settingRows }}" as="row" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;justify-content:space-between;height:42px;">
+          <div style="font-size:13px;color:{{ textPri }};">{{ row.label }}</div>
+          <div style="display:flex;align-items:center;background:{{ ctlBg }};border-radius:13px;height:26px;overflow:hidden;">
+            <div style="width:28px;height:26px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:15px;color:{{ textSec }};cursor:default;" style-hover="background:{{ ctlHover }}">−</div>
+            <div style="min-width:56px;text-align:center;font-size:12px;font-weight:600;color:{{ textPri }};font-variant-numeric:tabular-nums;">{{ row.value }}</div>
+            <div style="width:28px;height:26px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:15px;color:{{ textSec }};cursor:default;" style-hover="background:{{ ctlHover }}">+</div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="display:flex;align-items:center;justify-content:space-between;height:42px;">
+        <div style="font-size:13px;color:{{ textPri }};">Launch at login</div>
+        <div style="width:38px;height:23px;border-radius:12px;background:{{ accent }};position:relative;box-shadow:inset 0 1px 2px rgba(0,0,0,0.12);cursor:default;">
+          <div style="position:absolute;top:1.5px;left:16.5px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.25);"></div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ isPopover }}" hint-placeholder-val="{{ false }}">
+      <div style="height:16px;flex:none;"></div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:440,&quot;height&quot;:540},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;window&quot;,&quot;popover&quot;],&quot;default&quot;:&quot;window&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;sitPhase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sitting&quot;,&quot;alert&quot;,&quot;standing&quot;,&quot;standDone&quot;],&quot;default&quot;:&quot;sitting&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;},&quot;waterPhase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;countdown&quot;,&quot;alert&quot;],&quot;default&quot;:&quot;countdown&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;},&quot;sitPct&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:55,&quot;min&quot;:0,&quot;max&quot;:100,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;State&quot;},&quot;waterPct&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:72,&quot;min&quot;:0,&quot;max&quot;:100,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;State&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#63EBE9&quot;,&quot;options&quot;:[&quot;#63EBE9&quot;,&quot;#6FC3FF&quot;,&quot;#8B7BFF&quot;,&quot;#5BE39B&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;ringWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:9,&quot;min&quot;:6,&quot;max&quot;:13,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Appearance&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.uid = Math.random().toString(36).slice(2, 8);
+  }
+  mix(hex, pct, to) {
+    const h = (x) => [1, 3, 5].map((i) => parseInt(x.slice(i, i + 2), 16));
+    const a = h(hex), b = h(to);
+    return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * pct).toString(16).padStart(2, '0')).join('');
+  }
+  renderVals() {
+    const p = this.props;
+    const dark = (p.mode ?? 'light') === 'dark';
+    const isPopover = (p.variant ?? 'window') === 'popover';
+    const accent = p.accent ?? '#63EBE9';
+    const red = '#FF6157';
+    const warm = '#F2B25C';
+    const ringWidth = Number(p.ringWidth ?? 9);
+    const sitPhase = p.sitPhase ?? 'sitting';
+    const waterPhase = p.waterPhase ?? 'countdown';
+    const sitPct = Number(p.sitPct ?? 55);
+    const waterPct = waterPhase === 'alert' ? 5 : Number(p.waterPct ?? 72);
+
+    const R = 57, C = 2 * Math.PI * R;
+    const sitRingPct = (sitPhase === 'alert' || sitPhase === 'standDone') ? 100 : sitPct;
+    const breathe = 'su-breathe 1.9s ease-in-out infinite';
+
+    const textPri = dark ? '#F4F7F9' : '#1C242C';
+    const textSec = dark ? 'rgba(235,242,246,0.55)' : 'rgba(28,36,44,0.55)';
+    const iconBase = dark ? 'rgba(235,242,246,0.82)' : 'rgba(28,36,44,0.72)';
+
+    const showSitIcon = sitPhase === 'sitting' || sitPhase === 'standDone';
+    const showSitBtns = sitPhase === 'alert' || sitPhase === 'standDone';
+
+    const level = Math.max(0, Math.min(1, waterPct / 100));
+    const yTop = 15, yBot = 37.2;
+    const y0 = yBot - level * (yBot - yTop);
+    const hw = 9.4 - (y0 - 12) * 0.091;
+    const x1 = (24 - hw).toFixed(1), x2 = (24 + hw).toFixed(1);
+    const ys = y0.toFixed(1);
+    const surfaceD = 'M ' + x1 + ' ' + ys + ' Q ' + (24 - hw / 2).toFixed(1) + ' ' + (y0 - 1.6).toFixed(1) + ' 24 ' + ys + ' T ' + x2 + ' ' + ys;
+    const waterBodyD = surfaceD + ' L 38 45 L 10 45 Z';
+    const y2 = Math.min(y0 + 2.4, 38.6).toFixed(1);
+    const waveLine2D = 'M ' + (24 - hw + 2).toFixed(1) + ' ' + y2 + ' Q 24 ' + (Math.min(y0 + 3.5, 39.3)).toFixed(1) + ' ' + (24 + hw - 2).toFixed(1) + ' ' + y2;
+
+    const captions = { sitting: 'Sitting · 23 min left', alert: 'Time to stand up', standing: 'Standing · 3 min left', standDone: 'Done · next round' };
+
+    return {
+      uid: this.uid,
+      isWindow: !isPopover, isPopover,
+      accent, ringWidth,
+      ringC: C.toFixed(1),
+      sitDash: (C * (1 - sitRingPct / 100)).toFixed(1),
+      waterDash: (C * (1 - waterPct / 100)).toFixed(1),
+      sitRingColor: sitPhase === 'alert' ? red : (sitPhase === 'standing' ? warm : accent),
+      waterRingA: waterPhase === 'alert' ? red : accent,
+      waterRingB: waterPhase === 'alert' ? this.mix(red, 0.4, '#FFFFFF') : this.mix(accent, 0.35 + 0.4 * (1 - level), '#FFFFFF'),
+      showSitPerson: sitPhase === 'sitting',
+      iconFilter: dark ? 'invert(1) brightness(1.7)' : 'none',
+      iconOpacity: dark ? 0.9 : 0.82,
+      showStandPerson: sitPhase === 'standing',
+      sitTwoBtn: sitPhase === 'alert',
+      sitOneBtn: sitPhase === 'standDone',
+      showCup: waterPhase !== 'alert',
+      waterTwoBtn: waterPhase === 'alert',
+      discPrimaryBg: accent + 'E6',
+      discSecBg: dark ? 'rgba(22,28,36,0.42)' : 'rgba(255,255,255,0.42)',
+      discDivider: dark ? 'rgba(255,255,255,0.22)' : 'rgba(28,36,44,0.16)',
+      discBorder: dark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.60)',
+      showSitIcon,
+      showStandIcon: !showSitIcon,
+      sitIconSize: showSitBtns ? 30 : 52,
+      cupSize: waterPhase === 'alert' ? 36 : 54,
+      sitIconColor: sitPhase === 'standDone' ? accent : iconBase,
+      sitIconAnim: sitPhase === 'standDone' ? breathe : 'none',
+      standIconColor: sitPhase === 'alert' ? red : warm,
+      standIconAnim: sitPhase === 'alert' ? breathe : 'none',
+      cupAnim: waterPhase === 'alert' ? breathe : 'none',
+      sitCaption: p.sitCaption ?? captions[sitPhase],
+      waterCaption: p.waterCaption ?? (waterPhase === 'alert' ? 'Time to hydrate' : 'Water · 18 min left'),
+      sitCaptionColor: sitPhase === 'alert' ? red : textSec,
+      waterCaptionColor: waterPhase === 'alert' ? red : textSec,
+      showSitBtns,
+      sitBtnLabel: sitPhase === 'standDone' ? 'Next' : 'Start',
+      showSitSkip: sitPhase === 'alert',
+      showWaterBtns: waterPhase === 'alert',
+      waterY: ys,
+      waterTop: this.mix(accent, 0.15, '#FFFFFF'),
+      waterBot: this.mix(accent, 0.3, '#1B8E9E'),
+      surfaceD, waterBodyD, waveLine2D,
+      waveOpacity: level > 0.12 ? 0.5 : 0,
+      surfaceColor: this.mix(accent, 0.5, '#FFFFFF'),
+      cupStroke: iconBase,
+      glassHi: dark ? '#FFFFFF' : '#5B6B78',
+      textPri, textSec,
+      wallpaper: dark
+        ? 'radial-gradient(80% 70% at 75% 12%, rgba(99,235,233,0.16), transparent 60%), linear-gradient(155deg, #17233A 0%, #0D1626 55%, #1D1932 100%)'
+        : 'radial-gradient(90% 80% at 80% 10%, rgba(255,255,255,0.8), transparent 60%), linear-gradient(155deg, #C7E6EE 0%, #AFC6E6 50%, #D3C4E4 100%)',
+      blob1: dark ? 'radial-gradient(circle, rgba(99,235,233,0.30), rgba(99,235,233,0) 68%)' : 'radial-gradient(circle, rgba(99,235,233,0.60), rgba(99,235,233,0) 68%)',
+      blob2: dark ? 'radial-gradient(circle, rgba(140,110,255,0.32), rgba(140,110,255,0) 68%)' : 'radial-gradient(circle, rgba(255,185,215,0.65), rgba(255,185,215,0) 68%)',
+      winBg: dark ? 'rgba(26,31,38,0.55)' : 'rgba(248,251,252,0.62)',
+      winBorder: dark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.65)',
+      innerHi: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.85)',
+      ringTrack: dark ? 'rgba(255,255,255,0.10)' : 'rgba(28,36,44,0.09)',
+      divider: dark ? 'rgba(255,255,255,0.09)' : 'rgba(28,36,44,0.09)',
+      ctlBg: dark ? 'rgba(255,255,255,0.09)' : 'rgba(28,36,44,0.06)',
+      ctlHover: dark ? 'rgba(255,255,255,0.14)' : 'rgba(28,36,44,0.10)',
+      btnSecBg: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.55)',
+      btnSecBorder: dark ? 'rgba(255,255,255,0.16)' : 'rgba(28,36,44,0.12)',
+      settingRows: [
+        { label: 'Sitting', value: '45 min' },
+        { label: 'Standing', value: '5 min' },
+        { label: 'Water break', value: '30 min' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
