@@ -147,11 +147,11 @@ export function mountRings(root, onAction) {
     }
     const appearing = knob.style.display === 'none' || !knob.style.transform;
     knob.style.display = '';
-    const a = (pct / 100) * 2 * Math.PI - Math.PI / 2;
-    const x = 65 + R * Math.cos(a);
-    const y = 65 + R * Math.sin(a);
+    // center → rotate → radius, so the transform transition interpolates the
+    // angle and the knob glides along the circle even across big jumps
+    const deg = (pct / 100) * 360 - 90;
     if (appearing) knob.classList.add('no-anim'); // appear in place, no fly-in
-    knob.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+    knob.style.transform = `translate(65px, 65px) rotate(${deg.toFixed(2)}deg) translate(${R}px)`;
     if (appearing) {
       void knob.offsetWidth;
       knob.classList.remove('no-anim');
