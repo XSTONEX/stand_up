@@ -4,6 +4,23 @@
 
 UI 按 `design_handoff_standup/` 中的高保真设计稿 1:1 实现。
 
+## 安装
+
+> ⚠️ 本 App 未经 Apple 公证（项目没有付费开发者账号）。从浏览器下载后，macOS 会给它打上「隔离」标记，
+> 在 Apple 芯片的 Mac 上首次打开可能提示 **“已损坏，无法打开”** 或 **“无法验证开发者”**——
+> **不是文件坏了**，解除隔离即可。
+
+1. 把 **Stand UP.app** 拖进「应用程序」文件夹；
+2. 解除隔离标记，任选其一：
+   - 终端执行（推荐，一步到位）：
+     ```bash
+     xattr -cr "/Applications/Stand UP.app"
+     ```
+   - 或双击随包附带的 **`fix-gatekeeper.command`**（本仓库 `scripts/` 下），自动完成上一步；
+   - 或**右键点图标 → 打开**，在弹窗里再点一次「打开」（若弹窗只有「移到废纸篓」，说明系统版本较新，请用上面终端或 `.command` 方式）。
+
+之后正常双击即可。想彻底免除这一步，需要 Apple 付费开发者账号做正式签名 + 公证（notarization）。
+
 ## 技术栈
 
 - **前端**：原生 HTML / CSS / JavaScript（ES Modules），零框架、零打包器、零 npm 依赖
@@ -30,6 +47,17 @@ cd src-tauri
 cargo tauri dev        # 开发运行
 cargo tauri build      # 产出 .app / .dmg（target/release/bundle/）
 ```
+
+发布构建用脚本一键完成（`cargo tauri build` + ad-hoc 深度签名 + 校验），产物会做正确的 `codesign` 封装，
+避免下载后在 Apple 芯片上被误报「已损坏」：
+
+```bash
+./scripts/build_release.sh
+```
+
+> 签名说明：`tauri.conf.json` 里 `bundle.macOS.signingIdentity` 设为 `"-"`（ad-hoc）。
+> 没有这一项时 Tauri 根本不会调用 `codesign`，产出的包只带链接器的最小签名（`linker-signed`，未封装 Info.plist），
+> 隔离后即被判定为「已损坏」。ad-hoc 签名把它降级成用户可绕过的「无法验证开发者」。
 
 前端无构建步骤：`src/` 里的文件即最终产物，也可直接用任意静态服务器在浏览器里预览
 （浏览器模式自动带设计稿的桌面背景框，支持 `?sit=alert&water=alert&sitPct=52` 等参数查看各状态）。
