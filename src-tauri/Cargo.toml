@@ -1,6 +1,6 @@
 [package]
 name = "standup"
-version = "0.2.1"
+version = "0.3.0"
 description = "Stand UP! — a tiny macOS reminder to stand up, move, and drink water"
 edition = "2021"
 

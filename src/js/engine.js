@@ -14,6 +14,11 @@ const LS_TIMERS = 'standup.timers.v1';
 // sit → stand → water lifecycle can be exercised quickly
 const MINUTE = new URLSearchParams(location.search).has('fast') ? 1000 : 60000;
 
+// A gap this long between ticks (or between app runs) means the machine slept
+// or the user left the desk — restart the countdowns instead of replaying the
+// stale alerts they missed. Always real time, even in ?fast mode.
+const GAP_MS = 5 * 60000;
+
 export const EV_STATE = 'standup://state';
 export const EV_ACTION = 'standup://action';
 export const EV_REQUEST = 'standup://request-state';
@@ -46,19 +51,19 @@ function loadPersisted() {
     // values from older builds must not override it
     state.settings.accent = DEFAULT_SETTINGS.accent;
     const t = JSON.parse(localStorage.getItem(LS_TIMERS) || 'null');
-    if (t && t.sit && t.water) {
+    if (t && t.sit && t.water && Number.isFinite(t.sit.startedAt) && Number.isFinite(t.water.startedAt)) {
       state.sit = t.sit;
       state.water = t.water;
-      // if a deadline passed while the app was not running, land on alert once
-      if (state.sit.phase === 'sitting' && remaining('sit') <= 0) state.sit.phase = 'alert';
-      if (state.sit.phase === 'standing' && remaining('sit') <= 0) state.sit.phase = 'standDone';
-      if (state.water.phase === 'countdown' && remaining('water') <= 0) state.water.phase = 'alert';
+      // closed briefly → keep the timers; deadlines that passed meanwhile fire
+      // through the first tick like any other. Closed for long → fresh start.
+      if (!(Number.isFinite(t.seenAt) && Date.now() - t.seenAt <= GAP_MS)) resetTimers();
     }
   } catch (e) { console.warn('persist load', e); }
 }
 
 function persistTimers() {
-  localStorage.setItem(LS_TIMERS, JSON.stringify({ sit: state.sit, water: state.water }));
+  // seenAt is the liveness heartbeat loadPersisted() measures the away-gap against
+  localStorage.setItem(LS_TIMERS, JSON.stringify({ sit: state.sit, water: state.water, seenAt: Date.now() }));
 }
 function persistSettings() {
   localStorage.setItem(LS_SETTINGS, JSON.stringify(state.settings));
@@ -161,25 +166,41 @@ function settleAlerts() {
 
 // ---------- state machine ----------
 
+function resetTimers() {
+  state.sit = { phase: 'sitting', startedAt: Date.now() };
+  state.water = { phase: 'countdown', startedAt: Date.now() };
+}
+
+let lastTickAt = Date.now();
+
 function tick() {
-  let changed = false;
+  const now = Date.now();
+  const gap = now - lastTickAt;
+  lastTickAt = now;
 
-  if (state.sit.phase === 'sitting' && remaining('sit') <= 0) {
-    state.sit.phase = 'alert';
-    fireAlert('sit');
-    changed = true;
-  } else if (state.sit.phase === 'standing' && remaining('sit') <= 0) {
-    state.sit.phase = 'standDone';
-    changed = true;
+  if (gap > GAP_MS) {
+    // the machine slept or the process was frozen — the user was away
+    resetTimers();
+    settleAlerts();
+  } else {
+    if (state.sit.phase === 'sitting' && remaining('sit') <= 0) {
+      state.sit.phase = 'alert';
+      fireAlert('sit');
+    } else if (state.sit.phase === 'standing' && remaining('sit') <= 0) {
+      state.sit.phase = 'standDone';
+      // standDone also waits for a button press (Next) — tell the user, but
+      // without the red tray/badge urgency of the real alerts
+      invoke('notify', { title: 'Standing done', body: 'Nice work — press Next to start the next sitting round.' });
+      invoke('show_popover', {});
+    }
+
+    if (state.water.phase === 'countdown' && remaining('water') <= 0) {
+      state.water.phase = 'alert';
+      fireAlert('water');
+    }
   }
 
-  if (state.water.phase === 'countdown' && remaining('water') <= 0) {
-    state.water.phase = 'alert';
-    fireAlert('water');
-    changed = true;
-  }
-
-  if (changed) persistTimers();
+  persistTimers(); // every tick, so seenAt stays a fresh liveness heartbeat
   broadcast();
 }
 
@@ -231,7 +252,21 @@ export function setSetting(key, value) {
   state.settings[key] = value;
   persistSettings();
   if (key === 'launchAtLogin') invoke('set_autostart', { enabled: value });
+  keepMinuteAfterShrink(key);
   broadcast();
+}
+
+// Lowering a duration below the time already elapsed must not fire the alert
+// mid-adjustment — pin the running countdown to at least a minute instead.
+function keepMinuteAfterShrink(key) {
+  const kind =
+    (key === 'sitMin' && state.sit.phase === 'sitting') ? 'sit' :
+    (key === 'standMin' && state.sit.phase === 'standing') ? 'sit' :
+    (key === 'waterMin' && state.water.phase === 'countdown') ? 'water' : null;
+  if (!kind || remaining(kind) >= MINUTE) return;
+  const t = kind === 'sit' ? state.sit : state.water;
+  t.startedAt = Date.now() - (totalMs(kind) - MINUTE);
+  persistTimers();
 }
 
 export function getSettings() {
