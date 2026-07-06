@@ -36,6 +36,8 @@ UI 按 `design_handoff_standup/` 中的高保真设计稿 1:1 实现。
 | 菜单栏 | 18pt 模板图标（自动适配深浅菜单栏）；到点换成实心字形 + 红点；点击弹出 popover |
 | Popover | 与主窗口相同的双环 + 环内 Start/Skip、Done/Skip 操作按钮；**提醒到点自动弹出**，失焦自动收起 |
 | 系统通知 | 到点同时发送通知中心横幅 |
+| 快捷键 | `⌘W` 关闭（隐藏）窗口、`⌘M` 最小化、`⌘Q` 退出、`⌘H` 隐藏、`Esc` 收起 popover；应用菜单里还有 Edit（`⌘C/V/X/A/Z`，用于时长输入框）与 **Check for Updates…** |
+| 自动更新 | 启动 20 秒后 + 每 24 小时静默检查 GitHub Releases，有新版自动下载安装（minisign 验签），下次启动生效并发通知；菜单 **Check for Updates…** 可手动检查并立即重启更新 |
 
 提醒生命周期：`坐（倒计时）→ 到点（红环 + Start/Skip）→ 站（暖色环倒计时）→ 完成（Next）→ 回到坐`；喝水为独立循环 `倒计时 → 到点（Done/Skip）→ 重新计时`。
 
@@ -48,12 +50,29 @@ cargo tauri dev        # 开发运行
 cargo tauri build      # 产出 .app / .dmg（target/release/bundle/）
 ```
 
-发布构建用脚本一键完成（`cargo tauri build` + ad-hoc 深度签名 + 校验），产物会做正确的 `codesign` 封装，
-避免下载后在 Apple 芯片上被误报「已损坏」：
+发布构建用脚本一键完成（`cargo tauri build` + ad-hoc 深度签名 + 校验 + 更新包与 `latest.json` 生成），
+产物会做正确的 `codesign` 封装，避免下载后在 Apple 芯片上被误报「已损坏」：
 
 ```bash
-./scripts/build_release.sh
+./scripts/build_release.sh            # 只构建
+./scripts/build_release.sh --publish  # 构建并发布 GitHub Release（需 gh 已登录）
 ```
+
+### 自动更新（无后端）
+
+更新走 [tauri-plugin-updater](https://tauri.app/plugin/updater/) + **GitHub Releases 静态文件**，没有任何服务端：
+
+1. 改版本号（`src-tauri/tauri.conf.json` 与 `src-tauri/Cargo.toml` 保持一致）；
+2. `./scripts/build_release.sh --publish` —— 自动产出 `StandUP_<版本>_<架构>.app.tar.gz`（minisign 签名）
+   和 `latest.json`，并上传到 `v<版本>` Release；
+3. 已安装的老版本会在启动 20 秒后（以及此后每 24 小时）请求
+   `https://github.com/XSTONEX/stand_up/releases/latest/download/latest.json`，
+   发现新版本即在后台下载、验签、替换 `.app`，下次启动生效。
+
+> 🔑 更新包用 `~/.tauri/standup_updater.key` 签名（公钥内置在 `tauri.conf.json`），**务必备份这个私钥**：
+> 丢失后新版本无法通过老版本的验签，用户只能手动重装。
+> 另外：应用自己下载的更新包不带 quarantine 标记，所以自动更新装上的新版本**不会**再被 Gatekeeper 拦截，
+> 「已损坏」的绕过步骤只在首次手动安装时需要。
 
 > 签名说明：`tauri.conf.json` 里 `bundle.macOS.signingIdentity` 设为 `"-"`（ad-hoc）。
 > 没有这一项时 Tauri 根本不会调用 `codesign`，产出的包只带链接器的最小签名（`linker-signed`，未封装 Info.plist），

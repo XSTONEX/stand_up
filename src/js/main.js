@@ -3,7 +3,7 @@
 
 import { mountRings } from './rings.js';
 import * as engine from './engine.js';
-import { isTauri, currentWindow } from './bridge.js';
+import { isTauri, currentWindow, invoke } from './bridge.js';
 
 // browser mode: wrap the window in the design-mock desktop frame
 if (!isTauri) document.documentElement.classList.add('preview');
@@ -12,6 +12,16 @@ if (!isTauri) document.documentElement.classList.add('preview');
 const win = currentWindow();
 document.querySelector('.tl.close').addEventListener('click', () => win?.hide());
 document.querySelector('.tl.min').addEventListener('click', () => win?.minimize());
+
+// standard shortcuts, handled here as well as in the app menu — when the
+// webview is focused it sees the key event first
+document.addEventListener('keydown', (e) => {
+  if (!e.metaKey || e.repeat || e.target.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase();
+  if (k === 'w') { e.preventDefault(); win?.hide(); }
+  else if (k === 'm') { e.preventDefault(); win?.minimize(); }
+  else if (k === 'q') { e.preventDefault(); invoke('quit_app', {}); }
+});
 
 const updateRings = mountRings(document.getElementById('rings'), engine.dispatch);
 

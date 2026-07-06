@@ -1,6 +1,6 @@
 [package]
 name = "standup"
-version = "0.1.1"
+version = "0.2.0"
 description = "Stand UP! — a tiny macOS reminder to stand up, move, and drink water"
 edition = "2021"
 
@@ -11,6 +11,7 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["macos-private-api", "tray-icon", "image-png"] }
 tauri-plugin-notification = "2"
 tauri-plugin-autostart = "2"
+tauri-plugin-updater = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 base64 = "0.22"
