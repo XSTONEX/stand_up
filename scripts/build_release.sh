@@ -51,11 +51,20 @@ case "$(uname -m)" in
 esac
 
 echo "==> cargo tauri build (v$VERSION, $ARCH)"
-cargo tauri build
+FALLBACK_DMG=0
+if ! cargo tauri build; then
+  # Tauri 的 bundle_dmg.sh 靠 AppleScript 控制 Finder 排版图标，
+  # 没有「自动化 › Finder」权限时报 -1743 挂掉（无头环境/CI 必挂），
+  # 且 DMG 失败会连带跳过更新包的生成。
+  # 回退：只出 .app + 更新包，DMG 稍后用 hdiutil 无 GUI 生成（不带图标排版）。
+  echo "!! DMG 打包失败（多半是 Finder 自动化权限 -1743），回退 hdiutil 方案"
+  cargo tauri build --bundles app
+  FALLBACK_DMG=1
+fi
 
 BUNDLE="$ROOT/src-tauri/target/release/bundle"
 APP="$(/usr/bin/find "$BUNDLE/macos" -maxdepth 1 -name '*.app' | head -n1)"
-DMG="$(/usr/bin/find "$BUNDLE/dmg"   -maxdepth 1 -name '*.dmg' | head -n1)"
+DMG="$(/usr/bin/find "$BUNDLE/dmg"   -maxdepth 1 -name "*${VERSION}*.dmg" 2>/dev/null | head -n1)"
 TARBALL="$(/usr/bin/find "$BUNDLE/macos" -maxdepth 1 -name '*.app.tar.gz' | head -n1)"
 
 if [[ -z "${APP:-}" ]]; then
@@ -73,6 +82,18 @@ codesign --force --deep --sign - "$APP"
 
 echo "==> 校验签名"
 codesign --verify --deep --strict --verbose=2 "$APP"
+
+if [[ "$FALLBACK_DMG" == "1" ]]; then
+  echo "==> hdiutil 生成 DMG（无 Finder 排版）"
+  STAGE="$(mktemp -d)"
+  cp -R "$APP" "$STAGE/"
+  ln -s /Applications "$STAGE/Applications"
+  cp "$ROOT/scripts/fix-gatekeeper.command" "$STAGE/" 2>/dev/null || true
+  mkdir -p "$BUNDLE/dmg"
+  DMG="$BUNDLE/dmg/Stand UP_${VERSION}_${ARCH}.dmg"
+  hdiutil create -volname "Stand UP" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
+  rm -rf "$STAGE"
+fi
 
 echo "==> 生成更新产物 latest.json"
 UPDATER_DIR="$BUNDLE/updater"
