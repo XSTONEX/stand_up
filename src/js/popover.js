@@ -17,6 +17,8 @@ emit(EV_REQUEST, {});
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') invoke('hide_popover', {});
+  else if (e.metaKey && e.key.toLowerCase() === 'w') { e.preventDefault(); invoke('hide_popover', {}); }
+  else if (e.metaKey && e.key.toLowerCase() === 'q') { e.preventDefault(); invoke('quit_app', {}); }
 });
 
 // browser preview fallback: render a static example state

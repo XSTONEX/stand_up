@@ -6,18 +6,19 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::Mutex;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use base64::Engine as _;
 use tauri::{
     image::Image,
-    menu::{MenuBuilder, MenuItemBuilder},
+    menu::{Menu, MenuBuilder, MenuItemBuilder, SubmenuBuilder},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager, PhysicalPosition, Rect, RunEvent, UserAttentionType, WebviewWindow,
-    WindowEvent,
+    WindowEvent, Wry,
 };
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt as _};
 use tauri_plugin_notification::NotificationExt as _;
+use tauri_plugin_updater::UpdaterExt as _;
 
 const TRAY_ID: &str = "main-tray";
 const TRAY_NORMAL: &[u8] = include_bytes!("../icons/tray-normal.png");
@@ -36,6 +37,12 @@ fn main_window(app: &AppHandle) -> Option<WebviewWindow> {
 
 fn popover(app: &AppHandle) -> Option<WebviewWindow> {
     app.get_webview_window("popover")
+}
+
+fn focused_window(app: &AppHandle) -> Option<WebviewWindow> {
+    app.webview_windows()
+        .into_values()
+        .find(|w| w.is_focused().unwrap_or(false))
 }
 
 fn show_main(app: &AppHandle) {
@@ -215,7 +222,153 @@ fn set_autostart(app: AppHandle, enabled: bool) {
     };
 }
 
+#[tauri::command]
+fn quit_app(app: AppHandle) {
+    app.exit(0);
+}
+
+// ---------- updater ----------
+// No backend: the app polls a static `latest.json` on GitHub Releases, verifies
+// the minisign signature against the pubkey baked into tauri.conf.json, and
+// swaps the .app bundle in place.
+
+fn spawn_update_check(app: &AppHandle, interactive: bool) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let result = check_and_install_update(&app, interactive).await;
+        if let Err(e) = result {
+            #[cfg(debug_assertions)]
+            eprintln!("[standup] update check failed: {e}");
+            let _ = e;
+            if interactive {
+                let _ = app
+                    .notification()
+                    .builder()
+                    .title("Stand UP!")
+                    .body("Could not check for updates. Please try again later.")
+                    .show();
+            }
+        }
+    });
+}
+
+async fn check_and_install_update(
+    app: &AppHandle,
+    interactive: bool,
+) -> tauri_plugin_updater::Result<()> {
+    let updater = app.updater()?;
+    match updater.check().await? {
+        Some(update) => {
+            let version = update.version.clone();
+            update.download_and_install(|_, _| {}, || {}).await?;
+            if interactive {
+                // the user asked for the update — apply it right away
+                app.restart();
+            } else {
+                let _ = app
+                    .notification()
+                    .builder()
+                    .title("Stand UP! updated")
+                    .body(format!(
+                        "Version {version} was downloaded and will be used the next time the app starts."
+                    ))
+                    .show();
+            }
+        }
+        None if interactive => {
+            let _ = app
+                .notification()
+                .builder()
+                .title("Stand UP!")
+                .body("You're on the latest version.")
+                .show();
+        }
+        None => {}
+    }
+    Ok(())
+}
+
 // ---------- setup ----------
+
+// Explicit app menu. The windows are undecorated (`decorations: false`), so the
+// standard Close/Minimize items — which go through `performClose:` /
+// `performMiniaturize:` — silently fail on them. Custom items with the same
+// accelerators route Cmd+W / Cmd+M (and Cmd+Q) through our own handlers.
+fn build_app_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
+    let app_menu = SubmenuBuilder::new(app, "Stand UP!")
+        .about(None)
+        .separator()
+        .item(&MenuItemBuilder::with_id("check-updates", "Check for Updates…").build(app)?)
+        .separator()
+        .services()
+        .separator()
+        .hide()
+        .hide_others()
+        .show_all()
+        .separator()
+        .item(
+            &MenuItemBuilder::with_id("app-quit", "Quit Stand UP!")
+                .accelerator("CmdOrCtrl+Q")
+                .build(app)?,
+        )
+        .build()?;
+
+    let edit_menu = SubmenuBuilder::new(app, "Edit")
+        .undo()
+        .redo()
+        .separator()
+        .cut()
+        .copy()
+        .paste()
+        .select_all()
+        .build()?;
+
+    let window_menu = SubmenuBuilder::new(app, "Window")
+        .item(
+            &MenuItemBuilder::with_id("app-minimize", "Minimize")
+                .accelerator("CmdOrCtrl+M")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("app-close", "Close Window")
+                .accelerator("CmdOrCtrl+W")
+                .build(app)?,
+        )
+        .build()?;
+
+    MenuBuilder::new(app)
+        .item(&app_menu)
+        .item(&edit_menu)
+        .item(&window_menu)
+        .build()
+}
+
+fn on_app_menu_event(app: &AppHandle, id: &str) {
+    match id {
+        "app-quit" => app.exit(0),
+        // closing means hiding: the app lives on in the Dock + menu bar
+        "app-close" => {
+            if let Some(w) = focused_window(app).or_else(|| main_window(app)) {
+                let _ = w.hide();
+            }
+        }
+        "app-minimize" => match focused_window(app) {
+            Some(w) if w.label() == "popover" => {
+                let _ = w.hide();
+            }
+            Some(w) => {
+                let _ = w.minimize();
+            }
+            None => {
+                if let Some(w) = main_window(app) {
+                    let _ = w.minimize();
+                }
+            }
+        },
+        "check-updates" => spawn_update_check(app, true),
+        _ => {}
+    }
+}
 
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let menu = MenuBuilder::new(app)
@@ -259,6 +412,7 @@ fn main() {
             MacosLauncher::LaunchAgent,
             None,
         ))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(PopoverState::default())
         .invoke_handler(tauri::generate_handler![
             show_popover,
@@ -270,9 +424,21 @@ fn main() {
             set_dock_badge,
             get_autostart,
             set_autostart,
+            quit_app,
         ])
+        .menu(build_app_menu)
+        .on_menu_event(|app, event| on_app_menu_event(app, event.id().as_ref()))
         .setup(|app| {
             build_tray(app.handle())?;
+
+            // silent update check shortly after launch, then once a day
+            let handle = app.handle().clone();
+            std::thread::spawn(move || loop {
+                std::thread::sleep(Duration::from_secs(20));
+                spawn_update_check(&handle, false);
+                std::thread::sleep(Duration::from_secs(24 * 60 * 60));
+            });
+
             Ok(())
         })
         .on_window_event(|window, event| match event {
