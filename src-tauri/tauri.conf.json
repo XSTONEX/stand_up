@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Stand UP",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "identifier": "com.kaidaocea.standup",
   "build": {
     "frontendDist": "../src"
@@ -21,6 +21,7 @@
         "transparent": true,
         "decorations": false,
         "shadow": true,
+        "backgroundThrottling": "disabled",
         "windowEffects": {
           "effects": ["popover", "sidebar"],
           "radius": 22,
@@ -40,6 +41,7 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "shadow": true,
+        "backgroundThrottling": "disabled",
         "windowEffects": {
           "effects": ["popover", "sidebar"],
           "radius": 22,
